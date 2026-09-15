@@ -1,5 +1,6 @@
-from backend.models import Portfolio
-from backend.paper_broker import PaperBroker
+from .market.engine import MarketEngine
+from .models import Portfolio
+from .paper_broker import PaperBroker
 
 
 def print_portfolio(
@@ -30,6 +31,23 @@ def print_portfolio(
 
 
 def main():
+
+    # -------------------------
+    # MARKET
+    # -------------------------
+
+    market = MarketEngine(
+        initial_prices={
+            "BTC": 115_000,
+            "ETH": 4_500,
+            "SOL": 200,
+        }
+    )
+
+    # -------------------------
+    # PORTFOLIO
+    # -------------------------
+
     portfolio = Portfolio(
         initial_cash=100_000,
         cash=100_000,
@@ -37,24 +55,30 @@ def main():
 
     broker = PaperBroker(portfolio)
 
-    market_prices = {
-        "BTC": 115_000,
-        "ETH": 4_500,
-    }
+    # -------------------------
+    # INITIAL STATE
+    # -------------------------
 
-    print("Initial state:")
+    print("Initial market:")
+
+    print(market.get_prices())
+
     print_portfolio(
         portfolio,
         broker,
-        market_prices,
+        market.get_prices(),
     )
+
+    # -------------------------
+    # BUY BTC
+    # -------------------------
 
     print("Buying BTC...")
 
     trade = broker.buy(
         symbol="BTC",
         quantity=0.05,
-        market_price=market_prices["BTC"],
+        market_price=market.get_price("BTC"),
     )
 
     print(trade)
@@ -62,34 +86,30 @@ def main():
     print_portfolio(
         portfolio,
         broker,
-        market_prices,
+        market.get_prices(),
     )
 
-    print("BTC price moves...")
+    # -------------------------
+    # MARKET MOVES
+    # -------------------------
 
-    market_prices["BTC"] = 117_000
+    print("Market moves...")
 
-    print_portfolio(
-        portfolio,
-        broker,
-        market_prices,
-    )
+    for i in range(5):
 
-    print("Selling BTC...")
+        market.update_prices()
 
-    trade = broker.sell(
-        symbol="BTC",
-        quantity=0.05,
-        market_price=market_prices["BTC"],
-    )
+        print(
+            f"\nMarket update #{i + 1}:"
+        )
 
-    print(trade)
+        print(market.get_prices())
 
-    print_portfolio(
-        portfolio,
-        broker,
-        market_prices,
-    )
+        print_portfolio(
+            portfolio,
+            broker,
+            market.get_prices(),
+        )
 
 
 if __name__ == "__main__":
