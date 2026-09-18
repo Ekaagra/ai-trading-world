@@ -3,6 +3,7 @@ from .market.engine import MarketEngine
 from .models import Portfolio
 from .paper_broker import PaperBroker
 from .risk import RiskEngine
+from .trade_history import TradeHistory
 
 
 def print_portfolio(
@@ -34,9 +35,9 @@ def print_portfolio(
 
 def main():
 
-    # -------------------------
-    # MARKET
-    # -------------------------
+    # ==============================
+    # 1. MARKET ENGINE
+    # ==============================
 
     market = MarketEngine(
         initial_prices={
@@ -46,9 +47,9 @@ def main():
         }
     )
 
-    # -------------------------
-    # AGENT
-    # -------------------------
+    # ==============================
+    # 2. TRADING AGENT
+    # ==============================
 
     btc_agent = MomentumAgent(
         symbol="BTC",
@@ -60,28 +61,38 @@ def main():
         market.get_price("BTC")
     ]
 
-    # -------------------------
-    # PORTFOLIO
-    # -------------------------
+    # ==============================
+    # 3. PORTFOLIO
+    # ==============================
 
     portfolio = Portfolio(
         initial_cash=100_000,
         cash=100_000,
     )
 
+    # ==============================
+    # 4. PAPER BROKER
+    # ==============================
+
     broker = PaperBroker(portfolio)
 
-    # -------------------------
-    # RISK ENGINE
-    # -------------------------
+    # ==============================
+    # 5. RISK ENGINE
+    # ==============================
 
     risk_engine = RiskEngine(
         max_position_value=10_000
     )
 
-    # -------------------------
+    # ==============================
+    # 6. TRADE HISTORY
+    # ==============================
+
+    trade_history = TradeHistory()
+
+    # ==============================
     # INITIAL STATE
-    # -------------------------
+    # ==============================
 
     print("Initial market:")
     print(market.get_prices())
@@ -92,23 +103,23 @@ def main():
         market.get_prices(),
     )
 
-    # -------------------------
+    # ==============================
     # MARKET LOOP
-    # -------------------------
+    # ==============================
 
     for i in range(10):
 
         # Update market prices
         market.update_prices()
 
-        # Add new BTC price to history
+        # Add latest BTC price to history
         btc_price_history.append(
             market.get_price("BTC")
         )
 
-        # -------------------------
+        # ==============================
         # AGENT DECISION
-        # -------------------------
+        # ==============================
 
         decision = btc_agent.decide(
             btc_price_history
@@ -129,9 +140,9 @@ def main():
             f"(confidence={decision.confidence:.4f})"
         )
 
-        # -------------------------
+        # ==============================
         # RISK CHECK
-        # -------------------------
+        # ==============================
 
         risk_decision = risk_engine.check(
             decision=decision,
@@ -147,11 +158,15 @@ def main():
             f"| {risk_decision.reason}"
         )
 
-        # -------------------------
-        # EXECUTE TRADE
-        # -------------------------
+        # ==============================
+        # TRADE EXECUTION
+        # ==============================
 
         if risk_decision.approved:
+
+            # --------------------------
+            # BUY
+            # --------------------------
 
             if decision.action == "BUY":
 
@@ -163,12 +178,19 @@ def main():
                     ),
                 )
 
+                # Save trade
+                trade_history.record(trade)
+
                 print(
                     f"Trade executed: "
                     f"BUY {trade['quantity']:.6f} "
                     f"{trade['symbol']} "
                     f"@ ${trade['execution_price']:,.2f}"
                 )
+
+            # --------------------------
+            # SELL
+            # --------------------------
 
             elif decision.action == "SELL":
 
@@ -180,6 +202,9 @@ def main():
                     ),
                 )
 
+                # Save trade
+                trade_history.record(trade)
+
                 print(
                     f"Trade executed: "
                     f"SELL {trade['quantity']:.6f} "
@@ -187,15 +212,51 @@ def main():
                     f"@ ${trade['execution_price']:,.2f}"
                 )
 
-        # -------------------------
-        # PORTFOLIO AFTER UPDATE
-        # -------------------------
+        # ==============================
+        # CURRENT PORTFOLIO
+        # ==============================
 
         print_portfolio(
             portfolio,
             broker,
             market.get_prices(),
         )
+
+    # ==============================
+    # TRADE HISTORY
+    # ==============================
+
+    print(
+        "\n========== TRADE HISTORY =========="
+    )
+
+    for i, trade in enumerate(
+        trade_history.get_trades(),
+        start=1,
+    ):
+        print(
+            f"{i}. "
+            f"{trade.side} "
+            f"{trade.quantity:.6f} "
+            f"{trade.symbol} "
+            f"@ ${trade.execution_price:,.2f} "
+            f"| Fee: ${trade.fee:.2f} "
+            f"| P&L: ${trade.realized_pnl:.2f}"
+        )
+
+    print(
+        f"\nTotal trades: "
+        f"{trade_history.total_trades()}"
+    )
+
+    print(
+        f"Total realized P&L: "
+        f"${trade_history.total_realized_pnl():,.2f}"
+    )
+
+    print(
+        "==================================="
+    )
 
 
 if __name__ == "__main__":
