@@ -1,7 +1,8 @@
-from .market.engine import MarketEngine
-from .models import Portfolio
-from .paper_broker import PaperBroker
-
+from backend.agents.momentum import MomentumAgent
+from backend.market.engine import MarketEngine
+from backend.models import Portfolio
+from backend.paper_broker import PaperBroker
+from backend.risk import RiskEngine
 
 def print_portfolio(
     portfolio: Portfolio,
@@ -45,6 +46,20 @@ def main():
     )
 
     # -------------------------
+    # AGENT
+    # -------------------------
+
+    btc_agent = MomentumAgent(
+        symbol="BTC",
+        short_window=3,
+        long_window=5,
+    )
+
+    btc_price_history = [
+        market.get_price("BTC")
+    ]
+
+    # -------------------------
     # PORTFOLIO
     # -------------------------
 
@@ -54,13 +69,13 @@ def main():
     )
 
     broker = PaperBroker(portfolio)
+    risk_engine = RiskEngine(max_position_value=10_000)
 
     # -------------------------
     # INITIAL STATE
     # -------------------------
 
     print("Initial market:")
-
     print(market.get_prices())
 
     print_portfolio(
@@ -70,40 +85,45 @@ def main():
     )
 
     # -------------------------
-    # BUY BTC
+    # MARKET LOOP
     # -------------------------
 
-    print("Buying BTC...")
-
-    trade = broker.buy(
-        symbol="BTC",
-        quantity=0.05,
-        market_price=market.get_price("BTC"),
-    )
-
-    print(trade)
-
-    print_portfolio(
-        portfolio,
-        broker,
-        market.get_prices(),
-    )
-
-    # -------------------------
-    # MARKET MOVES
-    # -------------------------
-
-    print("Market moves...")
-
-    for i in range(5):
+    for i in range(10):
 
         market.update_prices()
+
+        btc_price_history.append(
+            market.get_price("BTC")
+        )
+
+        decision = btc_agent.decide(
+            btc_price_history
+        )
 
         print(
             f"\nMarket update #{i + 1}:"
         )
 
         print(market.get_prices())
+
+        print(
+            f"Agent decision: "
+            f"{decision.action} "
+            f"{decision.symbol} "
+            f"(confidence={decision.confidence:.4f})"
+        )
+
+        risk_decision = risk_engine.check(
+            decision=decision,
+            portfolio=portfolio,
+            market_price=market.get_price("BTC"),
+        )
+
+        print(
+            f"Risk: "
+            f"{'APPROVED' if risk_decision.approved else 'REJECTED'} "
+            f"| {risk_decision.reason}"
+        )
 
         print_portfolio(
             portfolio,
