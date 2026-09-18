@@ -1,8 +1,9 @@
-from backend.agents.momentum import MomentumAgent
-from backend.market.engine import MarketEngine
-from backend.models import Portfolio
-from backend.paper_broker import PaperBroker
-from backend.risk import RiskEngine
+from .agents.momentum import MomentumAgent
+from .market.engine import MarketEngine
+from .models import Portfolio
+from .paper_broker import PaperBroker
+from .risk import RiskEngine
+
 
 def print_portfolio(
     portfolio: Portfolio,
@@ -69,7 +70,14 @@ def main():
     )
 
     broker = PaperBroker(portfolio)
-    risk_engine = RiskEngine(max_position_value=10_000)
+
+    # -------------------------
+    # RISK ENGINE
+    # -------------------------
+
+    risk_engine = RiskEngine(
+        max_position_value=10_000
+    )
 
     # -------------------------
     # INITIAL STATE
@@ -90,11 +98,17 @@ def main():
 
     for i in range(10):
 
+        # Update market prices
         market.update_prices()
 
+        # Add new BTC price to history
         btc_price_history.append(
             market.get_price("BTC")
         )
+
+        # -------------------------
+        # AGENT DECISION
+        # -------------------------
 
         decision = btc_agent.decide(
             btc_price_history
@@ -104,7 +118,9 @@ def main():
             f"\nMarket update #{i + 1}:"
         )
 
-        print(market.get_prices())
+        print(
+            market.get_prices()
+        )
 
         print(
             f"Agent decision: "
@@ -113,10 +129,16 @@ def main():
             f"(confidence={decision.confidence:.4f})"
         )
 
+        # -------------------------
+        # RISK CHECK
+        # -------------------------
+
         risk_decision = risk_engine.check(
             decision=decision,
             portfolio=portfolio,
-            market_price=market.get_price("BTC"),
+            market_price=market.get_price(
+                decision.symbol
+            ),
         )
 
         print(
@@ -124,6 +146,50 @@ def main():
             f"{'APPROVED' if risk_decision.approved else 'REJECTED'} "
             f"| {risk_decision.reason}"
         )
+
+        # -------------------------
+        # EXECUTE TRADE
+        # -------------------------
+
+        if risk_decision.approved:
+
+            if decision.action == "BUY":
+
+                trade = broker.buy(
+                    symbol=decision.symbol,
+                    quantity=risk_decision.quantity,
+                    market_price=market.get_price(
+                        decision.symbol
+                    ),
+                )
+
+                print(
+                    f"Trade executed: "
+                    f"BUY {trade['quantity']:.6f} "
+                    f"{trade['symbol']} "
+                    f"@ ${trade['execution_price']:,.2f}"
+                )
+
+            elif decision.action == "SELL":
+
+                trade = broker.sell(
+                    symbol=decision.symbol,
+                    quantity=risk_decision.quantity,
+                    market_price=market.get_price(
+                        decision.symbol
+                    ),
+                )
+
+                print(
+                    f"Trade executed: "
+                    f"SELL {trade['quantity']:.6f} "
+                    f"{trade['symbol']} "
+                    f"@ ${trade['execution_price']:,.2f}"
+                )
+
+        # -------------------------
+        # PORTFOLIO AFTER UPDATE
+        # -------------------------
 
         print_portfolio(
             portfolio,
