@@ -5,6 +5,7 @@ from .models import Portfolio
 from .paper_broker import PaperBroker
 from .risk import RiskEngine
 from .trade_history import TradeHistory
+from .performance import PerformanceAnalyzer
 import time
 
 def print_portfolio(
@@ -89,6 +90,12 @@ def main():
     # ==============================
 
     trade_history = TradeHistory()
+
+
+    performance = PerformanceAnalyzer(
+        initial_capital=portfolio.initial_cash,
+        trade_history=trade_history,
+    )
 
     # ==============================
     # INITIAL STATE
@@ -258,6 +265,79 @@ def main():
 
     print(
         "==================================="
+    )
+
+
+        # ==============================
+    # PERFORMANCE
+    # ==============================
+
+    report = performance.calculate()
+
+    print("\n========== PERFORMANCE ==========")
+
+    print(
+        f"Executions:         "
+        f"{report.execution_count}"
+    )
+
+    print(
+        f"Completed trades:   "
+        f"{report.completed_trades}"
+    )
+
+    print(
+        f"Open trades:        "
+        f"{report.open_trades}"
+    )
+
+    print(
+        f"Realized P&L:       "
+        f"${report.total_realized_pnl:,.2f}"
+    )
+
+    print(
+        f"Winning trades:     "
+        f"{report.winning_trades}"
+    )
+
+    print(
+        f"Losing trades:      "
+        f"{report.losing_trades}"
+    )
+
+    print(
+        f"Win rate:           "
+        f"{report.win_rate:.2f}%"
+    )
+
+    if report.profit_factor == float("inf"):
+
+        profit_factor_display = "∞"
+
+    else:
+
+        profit_factor_display = (
+            f"{report.profit_factor:.2f}"
+        )
+
+    print(
+        f"Profit factor:      "
+        f"{profit_factor_display}"
+    )
+
+    print(
+        f"Average trade P&L:  "
+        f"${report.average_trade_pnl:,.2f}"
+    )
+
+    print(
+        f"Return:             "
+        f"{report.return_percent:.4f}%"
+    )
+
+    print(
+        "================================="
     )
 
 
