@@ -41,7 +41,7 @@ class MarketEngine:
 
         return self.state.prices.copy()
 
-    def update_prices(self):
+    def update_prices(self) -> dict[str, float]:
 
         new_prices = (
             self.data_provider.get_prices(
@@ -50,3 +50,5 @@ class MarketEngine:
         )
 
         self.state.prices = new_prices
+
+        return self.state.prices.copy()

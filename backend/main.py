@@ -118,14 +118,35 @@ def main():
 
         time.sleep(10)
 
-        # Update market prices
-        market.update_prices()
+         # ==============================
+        # UPDATE MARKET
+        # ==============================
 
-        # Add latest BTC price to history
-        btc_price_history.append(
-            market.get_price("BTC")
+        prices = market.update_prices()
+
+        previous_btc_price = btc_price_history[-1]
+
+        current_btc_price = prices["BTC"]
+
+        price_change = (
+            current_btc_price
+            - previous_btc_price
         )
 
+        price_change_percent = (
+            price_change
+            / previous_btc_price
+        ) * 100
+
+        btc_price_history.append(
+            current_btc_price
+        )
+
+        print(
+            f"BTC change: "
+            f"{price_change:+.2f} "
+            f"({price_change_percent:+.4f}%)"
+        )
         # ==============================
         # AGENT DECISION
         # ==============================
