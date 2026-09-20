@@ -1,10 +1,11 @@
 from .agents.momentum import MomentumAgent
 from .market.engine import MarketEngine
+from .market.data import MarketDataProvider
 from .models import Portfolio
 from .paper_broker import PaperBroker
 from .risk import RiskEngine
 from .trade_history import TradeHistory
-
+import time
 
 def print_portfolio(
     portfolio: Portfolio,
@@ -39,12 +40,11 @@ def main():
     # 1. MARKET ENGINE
     # ==============================
 
+    data_provider = MarketDataProvider()
+
     market = MarketEngine(
-        initial_prices={
-            "BTC": 115_000,
-            "ETH": 4_500,
-            "SOL": 200,
-        }
+        symbols=["BTC", "ETH", "SOL"],
+        data_provider=data_provider,
     )
 
     # ==============================
@@ -108,6 +108,8 @@ def main():
     # ==============================
 
     for i in range(10):
+
+        time.sleep(10)
 
         # Update market prices
         market.update_prices()
