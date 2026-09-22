@@ -9,8 +9,94 @@ from .paper_broker import PaperBroker
 from .risk import RiskEngine
 from .trade_history import TradeHistory
 from .equity import EquityTracker
+from .performance import PerformanceAnalyzer
 
+def print_performance(performance):
 
+    report = performance.calculate()
+
+    print("\n========== PERFORMANCE ==========")
+
+    print(
+        f"Executions:         "
+        f"{report.execution_count}"
+    )
+
+    print(
+        f"Completed trades:   "
+        f"{report.completed_trades}"
+    )
+
+    print(
+        f"Open trades:        "
+        f"{report.open_trades}"
+    )
+
+    print(
+        f"Realized P&L:       "
+        f"${report.total_realized_pnl:,.2f}"
+    )
+
+    print(
+        f"Current equity:     "
+        f"${report.current_equity:,.2f}"
+    )
+
+    print(
+        f"Peak equity:        "
+        f"${report.peak_equity:,.2f}"
+    )
+
+    print(
+        f"Current drawdown:   "
+        f"${report.current_drawdown:,.2f}"
+    )
+
+    print(
+        f"Current DD %:       "
+        f"{report.current_drawdown_percent:.2f}%"
+    )
+
+    print(
+        f"Maximum drawdown:   "
+        f"${report.max_drawdown:,.2f}"
+    )
+
+    print(
+        f"Maximum DD %:       "
+        f"{report.max_drawdown_percent:.2f}%"
+    )
+
+    print(
+        f"Win rate:           "
+        f"{report.win_rate:.2f}%"
+    )
+
+    if report.profit_factor == float("inf"):
+        profit_factor = "∞"
+    else:
+        profit_factor = (
+            f"{report.profit_factor:.2f}"
+        )
+
+    print(
+        f"Profit factor:      "
+        f"{profit_factor}"
+    )
+
+    print(
+        f"Average trade P&L:  "
+        f"${report.average_trade_pnl:,.2f}"
+    )
+
+    print(
+        f"Return:             "
+        f"{report.return_percent:.4f}%"
+    )
+
+    print(
+        "================================="
+    )
 async def main():
 
     symbols = [
@@ -80,6 +166,16 @@ async def main():
     # ==============================
 
     trade_history = TradeHistory()
+
+    # ==============================
+    # PERFORMANCE
+    # ==============================
+
+    performance = PerformanceAnalyzer(
+        initial_capital=portfolio.initial_cash,
+        trade_history=trade_history,
+        equity_tracker=equity_tracker,
+    )
 
     print(
         "Starting live candle trading system..."
