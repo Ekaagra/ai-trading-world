@@ -20,6 +20,7 @@ class PerformanceReport:
 
     average_trade_pnl: float
     return_percent: float
+    
 
 
 class PerformanceAnalyzer:

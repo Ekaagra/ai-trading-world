@@ -18,11 +18,15 @@ name = "ai-trading-world"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "websockets" },
     { name = "yfinance" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "yfinance", specifier = ">=1.7.0" }]
+requires-dist = [
+    { name = "websockets", specifier = ">=17.1" },
+    { name = "yfinance", specifier = ">=1.7.0" },
+]
 
 [[package]]
 name = "beautifulsoup4"
