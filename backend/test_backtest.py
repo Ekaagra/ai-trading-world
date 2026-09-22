@@ -1,3 +1,4 @@
+from unittest import result
 from .backtest import BacktestEngine
 from .market.historical import HistoricalMarketData
 
@@ -59,6 +60,36 @@ def main():
     print(
         f"Completed trades:"
         f" {result.completed_trades}"
+    )
+
+    print(
+        f"Winning trades:   "
+        f"{result.winning_trades}"
+    )
+
+    print(
+        f"Losing trades:    "
+        f"{result.losing_trades}"
+    )
+
+    print(
+        f"Win rate:         "
+        f"{result.win_rate:.2f}%"
+    )
+
+    print(
+        f"Profit factor:    "
+        f"{result.profit_factor:.2f}"
+    )
+
+    print(
+        f"Average trade:    "
+        f"${result.average_trade_pnl:,.2f}"
+    )
+
+    print(
+        f"Realized P&L:     "
+        f"${result.total_realized_pnl:,.2f}"
     )
 
     print(

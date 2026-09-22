@@ -6,15 +6,25 @@ from .paper_broker import PaperBroker
 from .risk import RiskEngine
 from .trade_history import TradeHistory
 from .equity import EquityTracker
-
+from .performance import PerformanceAnalyzer
 
 @dataclass
 class BacktestResult:
     initial_capital: float
     final_equity: float
     total_return_percent: float
+
     total_trades: int
     completed_trades: int
+
+    winning_trades: int
+    losing_trades: int
+
+    win_rate: float
+    profit_factor: float
+    average_trade_pnl: float
+    total_realized_pnl: float
+
     max_drawdown: float
     max_drawdown_percent: float
 
@@ -166,6 +176,14 @@ class BacktestEngine:
             {"BTC": self.close_history[-1]}
         )
 
+        performance = PerformanceAnalyzer(
+            initial_capital=self.initial_capital,
+            trade_history=self.trade_history,
+            equity_tracker=self.equity_tracker,
+        )
+
+        report = performance.calculate()
+
         total_return_percent = (
             (final_equity - self.initial_capital)
             / self.initial_capital
@@ -174,11 +192,22 @@ class BacktestEngine:
         return BacktestResult(
             initial_capital=self.initial_capital,
             final_equity=final_equity,
-            total_return_percent=total_return_percent,
-            total_trades=self.trade_history.total_trades(),
-            completed_trades=self.trade_history.completed_trade_count(),
-            max_drawdown=self.equity_tracker.max_drawdown(),
-            max_drawdown_percent=(
-                self.equity_tracker.max_drawdown_percent()
-            ),
-        )                                                                     
+            total_return_percent=(
+                (final_equity - self.initial_capital)
+                / self.initial_capital
+            ) * 100,
+
+            total_trades=report.execution_count,
+            completed_trades=report.completed_trades,
+
+            winning_trades=report.winning_trades,
+            losing_trades=report.losing_trades,
+
+            win_rate=report.win_rate,
+            profit_factor=report.profit_factor,
+            average_trade_pnl=report.average_trade_pnl,
+            total_realized_pnl=report.total_realized_pnl,
+
+            max_drawdown=report.max_drawdown,
+            max_drawdown_percent=report.max_drawdown_percent,
+        )                                                                  
