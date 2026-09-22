@@ -1,21 +1,28 @@
 from .backtest import BacktestEngine
+from .market.historical import HistoricalMarketData
 
 
 def main():
 
-    candles = [
-        {"close": 100},
-        {"close": 101},
-        {"close": 102},
-        {"close": 103},
-        {"close": 104},
-        {"close": 106},
-        {"close": 108},
-        {"close": 110},
-        {"close": 109},
-        {"close": 107},
-        {"close": 105},
-    ]
+    # =========================
+    # GET HISTORICAL DATA
+    # =========================
+
+    market = HistoricalMarketData(
+        symbol="BTCUSDT",
+        interval="1m",
+    )
+
+    candles = market.fetch(
+        limit=500
+    )
+
+    print("\n========== HISTORICAL BACKTEST ==========")
+    print(f"Candles: {len(candles)}")
+
+    # =========================
+    # RUN BACKTEST
+    # =========================
 
     engine = BacktestEngine(
         initial_capital=100_000
@@ -25,9 +32,9 @@ def main():
         candles
     )
 
-    print(
-        "\n========== BACKTEST =========="
-    )
+    # =========================
+    # RESULTS
+    # =========================
 
     print(
         f"Initial capital: "
@@ -53,6 +60,7 @@ def main():
         f"Completed trades:"
         f" {result.completed_trades}"
     )
+
     print(
         f"Max drawdown:    "
         f"${result.max_drawdown:,.2f}"
@@ -63,9 +71,7 @@ def main():
         f"{result.max_drawdown_percent:.2f}%"
     )
 
-    print(
-        "=============================="
-    )
+    print("==========================================")
 
 
 if __name__ == "__main__":

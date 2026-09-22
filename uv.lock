@@ -18,12 +18,14 @@ name = "ai-trading-world"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "requests" },
     { name = "websockets" },
     { name = "yfinance" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "requests", specifier = ">=2.34.2" },
     { name = "websockets", specifier = ">=17.1" },
     { name = "yfinance", specifier = ">=1.7.0" },
 ]
