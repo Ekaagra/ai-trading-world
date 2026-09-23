@@ -14,10 +14,21 @@ class PerformanceReport:
 
     winning_trades: int
     losing_trades: int
-
     win_rate: float
+
     profit_factor: float
     average_trade_pnl: float
+
+    average_winning_trade: float
+    average_losing_trade: float
+
+    largest_winning_trade: float
+    largest_losing_trade: float
+
+    total_winning_pnl: float
+    total_losing_pnl: float
+
+    average_holding_time_seconds: float
 
     return_percent: float
 
@@ -25,9 +36,9 @@ class PerformanceReport:
     peak_equity: float
     current_drawdown: float
     current_drawdown_percent: float
+
     max_drawdown: float
     max_drawdown_percent: float
-
 
 class PerformanceAnalyzer:
 
@@ -49,6 +60,59 @@ class PerformanceAnalyzer:
 
         completed_trades = (
             self.trade_history.get_completed_trades()
+        )
+
+        winning_trade_pnls = [
+            trade.realized_pnl
+            for trade in completed_trades
+            if trade.realized_pnl > 0
+        ]
+
+        losing_trade_pnls = [
+            trade.realized_pnl
+            for trade in completed_trades
+            if trade.realized_pnl < 0
+        ]
+
+        total_winning_pnl = sum(winning_trade_pnls)
+
+        total_losing_pnl = sum(losing_trade_pnls)
+
+        average_winning_trade = (
+            total_winning_pnl / len(winning_trade_pnls)
+            if winning_trade_pnls
+            else 0.0
+        )
+
+        average_losing_trade = (
+            total_losing_pnl / len(losing_trade_pnls)
+            if losing_trade_pnls
+            else 0.0
+        )
+
+        largest_winning_trade = (
+            max(winning_trade_pnls)
+            if winning_trade_pnls
+            else 0.0
+        )
+
+        largest_losing_trade = (
+            min(losing_trade_pnls)
+            if losing_trade_pnls
+            else 0.0
+        )
+
+        holding_times = [
+            (
+                trade.exit_timestamp - trade.entry_timestamp
+            ).total_seconds()
+            for trade in completed_trades
+        ]
+
+        average_holding_time_seconds = (
+            sum(holding_times) / len(holding_times)
+            if holding_times
+            else 0.0
         )
 
         completed_trade_count = len(
@@ -185,46 +249,37 @@ class PerformanceAnalyzer:
         ) * 100
 
         return PerformanceReport(
+            execution_count=len(self.trade_history.get_trades()),
+            completed_trades=len(completed_trades),
+            open_trades=len(self.trade_history.get_open_trades()),
 
-            execution_count=execution_count,
-
-            completed_trades=(
-                completed_trade_count
-            ),
-
-            open_trades=open_trade_count,
-
-            total_realized_pnl=(
-                total_realized_pnl
-            ),
+            total_realized_pnl=total_realized_pnl,
 
             winning_trades=winning_trades,
-
             losing_trades=losing_trades,
-
             win_rate=win_rate,
 
             profit_factor=profit_factor,
+            average_trade_pnl=average_trade_pnl,
 
-            average_trade_pnl=(
-                average_trade_pnl
-            ),
+            average_winning_trade=average_winning_trade,
+            average_losing_trade=average_losing_trade,
+
+            largest_winning_trade=largest_winning_trade,
+            largest_losing_trade=largest_losing_trade,
+
+            total_winning_pnl=total_winning_pnl,
+            total_losing_pnl=total_losing_pnl,
+
+            average_holding_time_seconds=average_holding_time_seconds,
 
             return_percent=return_percent,
 
             current_equity=current_equity,
-
             peak_equity=peak_equity,
-
             current_drawdown=current_drawdown,
-
-            current_drawdown_percent=(
-                current_drawdown_percent
-            ),
+            current_drawdown_percent=current_drawdown_percent,
 
             max_drawdown=max_drawdown,
-
-            max_drawdown_percent=(
-                max_drawdown_percent
-            ),
+            max_drawdown_percent=max_drawdown_percent,
         )

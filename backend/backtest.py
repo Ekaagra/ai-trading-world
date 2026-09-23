@@ -30,7 +30,13 @@ class BacktestResult:
 
     completed_trade_details: list
     equity_curve: list
-
+    average_winning_trade: float
+    average_losing_trade: float
+    largest_winning_trade: float
+    largest_losing_trade: float
+    total_winning_pnl: float
+    total_losing_pnl: float
+    average_holding_time_seconds: float
 
 class BacktestEngine:
 
@@ -252,4 +258,11 @@ class BacktestEngine:
             equity_curve=(
                 self.equity_tracker.snapshots.copy()
             ),
+            average_winning_trade=report.average_winning_trade,
+            average_losing_trade=report.average_losing_trade,
+            largest_winning_trade=report.largest_winning_trade,
+            largest_losing_trade=report.largest_losing_trade,
+            total_winning_pnl=report.total_winning_pnl,
+            total_losing_pnl=report.total_losing_pnl,
+            average_holding_time_seconds=report.average_holding_time_seconds,
         )                                              

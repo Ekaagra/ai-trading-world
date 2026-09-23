@@ -178,16 +178,76 @@ def main():
     # PLOT EQUITY CURVE
     # =========================
 
-    timestamps = [snapshot.timestamp for snapshot in result.equity_curve]
-    equity_values = [snapshot.equity for snapshot in result.equity_curve]
+    timestamps = [
+        snapshot.timestamp
+        for snapshot in result.equity_curve
+    ]
 
-    plt.figure(figsize=(12, 6))
-    plt.plot(timestamps, equity_values)
+    equity_values = [
+        snapshot.equity
+        for snapshot in result.equity_curve
+    ]
 
-    plt.title("Backtest Equity Curve")
+    plt.figure(figsize=(14, 7))
+
+    plt.plot(
+        timestamps,
+        equity_values,
+        label="Equity"
+    )
+
+    for trade in result.completed_trade_details:
+
+        entry_time = trade.entry_timestamp
+        exit_time = trade.exit_timestamp
+
+        entry_snapshot = min(
+            result.equity_curve,
+            key=lambda snapshot: abs(
+                (snapshot.timestamp - entry_time).total_seconds()
+            )
+        )
+
+        exit_snapshot = min(
+            result.equity_curve,
+            key=lambda snapshot: abs(
+                (snapshot.timestamp - exit_time).total_seconds()
+            )
+        )
+
+        plt.scatter(
+            entry_snapshot.timestamp,
+            entry_snapshot.equity,
+            marker="^",
+            s=80,
+            label="BUY" if "BUY" not in plt.gca().get_legend_handles_labels()[1] else ""
+        )
+
+        if trade.exit_reason == "STOP_LOSS":
+            marker = "v"
+            label = "STOP_LOSS"
+        elif trade.exit_reason == "TAKE_PROFIT":
+            marker = "v"
+            label = "TAKE_PROFIT"
+        else:
+            marker = "v"
+            label = "SELL"
+
+        existing_labels = plt.gca().get_legend_handles_labels()[1]
+
+        plt.scatter(
+            exit_snapshot.timestamp,
+            exit_snapshot.equity,
+            marker=marker,
+            s=80,
+            label=label if label not in existing_labels else ""
+        )
+
+    plt.title("Backtest Equity Curve with Trade Markers")
     plt.xlabel("Time")
     plt.ylabel("Equity ($)")
     plt.grid(True)
+    plt.legend()
     plt.tight_layout()
 
     plt.show()
@@ -202,7 +262,7 @@ def main():
         for snapshot in result.equity_curve
     ]
 
-    plt.figure(figsize=(12, 6))
+    plt.figure(figsize=(14, 6))
     plt.plot(timestamps, drawdown_values)
 
     plt.title("Backtest Drawdown")
@@ -212,6 +272,51 @@ def main():
     plt.tight_layout()
 
     plt.show()
+
+    print("\n========== TRADE ANALYTICS ==========")
+
+    print(
+        f"Average winning trade: "
+        f"${result.average_winning_trade:,.2f}"
+    )
+
+    print(
+        f"Average losing trade:  "
+        f"${result.average_losing_trade:,.2f}"
+    )
+
+    print(
+        f"Largest winning trade: "
+        f"${result.largest_winning_trade:,.2f}"
+    )
+
+    print(
+        f"Largest losing trade:  "
+        f"${result.largest_losing_trade:,.2f}"
+    )
+
+    print(
+        f"Total winning P&L:     "
+        f"${result.total_winning_pnl:,.2f}"
+    )
+
+    print(
+        f"Total losing P&L:      "
+        f"${result.total_losing_pnl:,.2f}"
+    )
+
+    average_holding_time = result.average_holding_time_seconds
+
+    hours = int(average_holding_time // 3600)
+    minutes = int((average_holding_time % 3600) // 60)
+    seconds = int(average_holding_time % 60)
+
+    print(
+        f"Average holding time:  "
+        f"{hours}:{minutes:02d}:{seconds:02d}"
+    )
+
+    print("======================================")
 
 if __name__ == "__main__":
     main()
