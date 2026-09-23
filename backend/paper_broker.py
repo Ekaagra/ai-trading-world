@@ -8,12 +8,13 @@ class PaperBroker:
         portfolio: Portfolio,
         fee_rate: float = 0.001,
         slippage_rate: float = 0.0005,
+        
     ):
         self.portfolio = portfolio
         self.fee_rate = fee_rate
         self.slippage_rate = slippage_rate
 
-    def buy(self, symbol: str, quantity: float, market_price: float):
+    def buy(self, symbol: str, quantity: float, market_price: float,timestamp=None):
         execution_price = market_price * (1 + self.slippage_rate)
 
         gross_cost = execution_price * quantity
@@ -48,9 +49,10 @@ class PaperBroker:
             "execution_price": execution_price,
             "fee": fee,
             "total_cost": total_cost,
+            "timestamp": timestamp,
         }
 
-    def sell(self, symbol: str, quantity: float, market_price: float):
+    def sell(self, symbol: str, quantity: float, market_price: float,timestamp=None,exit_reason="SIGNAL",exit_message=""):
         position = self.portfolio.get_position(symbol)
 
         if quantity > position.quantity:
@@ -83,6 +85,9 @@ class PaperBroker:
             "fee": fee,
             "realized_pnl": pnl,
             "net_value": net_value,
+            "timestamp": timestamp,
+            "exit_reason": exit_reason,
+            "exit_message": exit_message,
         }
 
     def portfolio_value(self, market_prices: dict[str, float]):

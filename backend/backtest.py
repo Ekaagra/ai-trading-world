@@ -28,6 +28,9 @@ class BacktestResult:
     max_drawdown: float
     max_drawdown_percent: float
 
+    completed_trade_details: list
+    equity_curve: list
+
 
 class BacktestEngine:
 
@@ -67,6 +70,22 @@ class BacktestEngine:
             initial_equity=initial_capital
         )
 
+    def _normalize_exit_reason(
+        self,
+        reason: str,
+    ) -> str:
+
+        reason_upper = reason.upper()
+
+        if "TAKE-PROFIT" in reason_upper:
+            return "TAKE_PROFIT"
+
+        if "STOP-LOSS" in reason_upper:
+            return "STOP_LOSS"
+
+        return "SIGNAL"
+
+
     def run(
         self,
         candles: list[dict],
@@ -83,7 +102,7 @@ class BacktestEngine:
                     {"BTC": price}
                 )
 
-                self.equity_tracker.update(equity)
+                self.equity_tracker.update(equity,timestamp=candle["timestamp"])
 
                 continue
 
@@ -102,10 +121,19 @@ class BacktestEngine:
 
             if exit_decision.approved:
 
+                normalized_reason = (
+                    self._normalize_exit_reason(
+                        exit_decision.reason
+                    )
+                )
+
                 trade = self.broker.sell(
                     symbol="BTC",
                     quantity=exit_decision.quantity,
                     market_price=price,
+                    timestamp=candle["timestamp"],
+                    exit_reason=normalized_reason,
+                    exit_message=exit_decision.reason,
                 )
 
                 self.trade_history.record(trade)
@@ -144,6 +172,7 @@ class BacktestEngine:
                             symbol="BTC",
                             quantity=risk_decision.quantity,
                             market_price=price,
+                            timestamp=candle["timestamp"],
                         )
 
                         self.trade_history.record(trade)
@@ -154,6 +183,9 @@ class BacktestEngine:
                             symbol="BTC",
                             quantity=risk_decision.quantity,
                             market_price=price,
+                            timestamp=candle["timestamp"],
+                            exit_reason="SIGNAL",
+                            exit_message="Momentum agent sell signal",
                         )
 
                         self.trade_history.record(trade)
@@ -166,7 +198,7 @@ class BacktestEngine:
                 {"BTC": price}
             )
 
-            self.equity_tracker.update(equity)
+            self.equity_tracker.update(equity,timestamp=candle["timestamp"])
 
         # =========================
         # FINAL EQUITY
@@ -189,6 +221,8 @@ class BacktestEngine:
             / self.initial_capital
         ) * 100
 
+        completed_trade_details=self.trade_history.completed_trades,
+
         return BacktestResult(
             initial_capital=self.initial_capital,
             final_equity=final_equity,
@@ -210,4 +244,12 @@ class BacktestEngine:
 
             max_drawdown=report.max_drawdown,
             max_drawdown_percent=report.max_drawdown_percent,
-        )                                                                  
+
+            completed_trade_details=(
+                self.trade_history.completed_trades
+            ),
+
+            equity_curve=(
+                self.equity_tracker.snapshots.copy()
+            ),
+        )                                              

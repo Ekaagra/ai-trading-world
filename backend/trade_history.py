@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-
 @dataclass
 class TradeRecord:
     timestamp: datetime
@@ -12,6 +11,9 @@ class TradeRecord:
     execution_price: float
     fee: float
     realized_pnl: float = 0.0
+
+    exit_reason: str = ""
+    exit_message: str = ""
 
 
 @dataclass
@@ -25,7 +27,13 @@ class CompletedTrade:
     entry_fee: float
     exit_fee: float
 
+    entry_timestamp: datetime
+    exit_timestamp: datetime
+
     realized_pnl: float
+
+    exit_reason: str = "SIGNAL"
+    exit_message: str = ""
 
 
 class TradeHistory:
@@ -43,7 +51,15 @@ class TradeHistory:
     def record(self, trade: dict):
 
         record = TradeRecord(
-            timestamp=datetime.now(),
+            timestamp=(
+                datetime.fromtimestamp(trade["timestamp"] / 1000)
+                if isinstance(trade.get("timestamp"), (int, float))
+                else (
+                    trade["timestamp"]
+                    if trade.get("timestamp") is not None
+                    else datetime.now()
+                )
+            ),
             symbol=trade["symbol"],
             side=trade["side"],
             quantity=trade["quantity"],
@@ -53,6 +69,14 @@ class TradeHistory:
             realized_pnl=trade.get(
                 "realized_pnl",
                 0.0
+            ),
+            exit_reason=trade.get(
+                "exit_reason",
+                "",
+            ),
+            exit_message=trade.get(
+                "exit_message",
+                "",
             ),
         )
 
@@ -90,7 +114,16 @@ class TradeHistory:
                 entry_fee=entry.fee,
                 exit_fee=record.fee,
 
+                entry_timestamp=entry.timestamp,
+                exit_timestamp=record.timestamp,
+
                 realized_pnl=record.realized_pnl,
+
+                exit_reason=(
+                    record.exit_reason
+                    or "SIGNAL"
+                ),
+                exit_message=record.exit_message,
             )
 
             self.completed_trades.append(

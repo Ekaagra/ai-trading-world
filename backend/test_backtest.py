@@ -1,6 +1,8 @@
 from unittest import result
 from .backtest import BacktestEngine
 from .market.historical import HistoricalMarketData
+from collections import Counter
+import matplotlib.pyplot as plt
 
 
 def main():
@@ -15,7 +17,7 @@ def main():
     )
 
     candles = market.fetch(
-        limit=500
+        limit=5000
     )
 
     print("\n========== HISTORICAL BACKTEST ==========")
@@ -104,6 +106,86 @@ def main():
 
     print("==========================================")
 
+    print("\n========== COMPLETED TRADES ==========")
+
+    for i, trade in enumerate(
+        result.completed_trade_details,
+        start=1,
+    ):
+
+        duration = (
+            trade.exit_timestamp
+            - trade.entry_timestamp
+        )
+
+        print(
+            f"Trade #{i} | "
+            f"{trade.symbol} | "
+            f"Entry: ${trade.entry_price:,.2f} | "
+            f"Exit: ${trade.exit_price:,.2f} | "
+            f"P&L: ${trade.realized_pnl:,.2f} | "
+            f"Duration: {duration} | "
+            f"Reason: {trade.exit_reason}"
+        )
+
+    print("=======================================")
+
+    exit_reasons = Counter(
+        trade.exit_reason
+        for trade in result.completed_trade_details
+    )
+
+    print("\n========== EXIT REASONS ==========")
+
+    for reason in [
+        "SIGNAL",
+        "STOP_LOSS",
+        "TAKE_PROFIT",
+    ]:
+        print(
+            f"{reason}: "
+            f"{exit_reasons.get(reason, 0)}"
+        )
+
+    print("==================================")
+
+    print("\n========== EQUITY CURVE ==========")
+
+    print(
+        f"Snapshots: "
+        f"{len(result.equity_curve)}"
+    )
+
+    if result.equity_curve:
+
+        first = result.equity_curve[0]
+        last = result.equity_curve[-1]
+
+        print(
+            f"Start: {first.timestamp} | "
+            f"Equity: ${first.equity:,.2f}"
+        )
+
+        print(
+            f"End:   {last.timestamp} | "
+            f"Equity: ${last.equity:,.2f}"
+        )
+
+    print("==================================")
+
+    timestamps = [snapshot.timestamp for snapshot in result.equity_curve]
+    equity_values = [snapshot.equity for snapshot in result.equity_curve]
+
+    plt.figure(figsize=(12, 6))
+    plt.plot(timestamps, equity_values)
+
+    plt.title("Backtest Equity Curve")
+    plt.xlabel("Time")
+    plt.ylabel("Equity ($)")
+    plt.grid(True)
+    plt.tight_layout()
+
+    plt.show()
 
 if __name__ == "__main__":
     main()

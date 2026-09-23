@@ -1,13 +1,15 @@
 from dataclasses import dataclass
-
+from datetime import datetime
 
 @dataclass
 class EquitySnapshot:
+    timestamp: datetime | None
+
     equity: float
     peak_equity: float
+
     drawdown: float
     drawdown_percent: float
-
 
 class EquityTracker:
 
@@ -15,7 +17,12 @@ class EquityTracker:
         self.peak_equity = initial_equity
         self.snapshots: list[EquitySnapshot] = []
 
-    def update(self, equity: float) -> EquitySnapshot:
+    def update(self, equity: float,timestamp=None) -> EquitySnapshot:
+
+        if isinstance(timestamp, (int, float)):
+            timestamp = datetime.fromtimestamp(
+                timestamp / 1000
+            )
 
         if equity > self.peak_equity:
             self.peak_equity = equity
@@ -32,6 +39,7 @@ class EquityTracker:
             drawdown_percent = 0.0
 
         snapshot = EquitySnapshot(
+            timestamp=timestamp,
             equity=equity,
             peak_equity=self.peak_equity,
             drawdown=drawdown,
