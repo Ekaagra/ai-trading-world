@@ -173,6 +173,11 @@ def main():
 
     print("==================================")
 
+
+    # =========================
+    # PLOT EQUITY CURVE
+    # =========================
+
     timestamps = [snapshot.timestamp for snapshot in result.equity_curve]
     equity_values = [snapshot.equity for snapshot in result.equity_curve]
 
@@ -182,6 +187,27 @@ def main():
     plt.title("Backtest Equity Curve")
     plt.xlabel("Time")
     plt.ylabel("Equity ($)")
+    plt.grid(True)
+    plt.tight_layout()
+
+    plt.show()
+
+
+    # =========================
+    # PLOT DRAWDOWN
+    # =========================
+
+    drawdown_values = [
+        snapshot.drawdown_percent
+        for snapshot in result.equity_curve
+    ]
+
+    plt.figure(figsize=(12, 6))
+    plt.plot(timestamps, drawdown_values)
+
+    plt.title("Backtest Drawdown")
+    plt.xlabel("Time")
+    plt.ylabel("Drawdown (%)")
     plt.grid(True)
     plt.tight_layout()
 
