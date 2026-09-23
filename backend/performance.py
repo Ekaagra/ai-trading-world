@@ -39,6 +39,8 @@ class PerformanceReport:
 
     max_drawdown: float
     max_drawdown_percent: float
+    expectancy: float
+    payoff_ratio: float
 
 class PerformanceAnalyzer:
 
@@ -87,6 +89,19 @@ class PerformanceAnalyzer:
         average_losing_trade = (
             total_losing_pnl / len(losing_trade_pnls)
             if losing_trade_pnls
+            else 0.0
+        )
+
+        expectancy = (
+            (total_winning_pnl + total_losing_pnl)
+            / len(completed_trades)
+            if completed_trades
+            else 0.0
+        )
+
+        payoff_ratio = (
+            average_winning_trade / abs(average_losing_trade)
+            if average_losing_trade != 0
             else 0.0
         )
 
@@ -282,4 +297,6 @@ class PerformanceAnalyzer:
 
             max_drawdown=max_drawdown,
             max_drawdown_percent=max_drawdown_percent,
+            expectancy=expectancy,
+            payoff_ratio=payoff_ratio,
         )

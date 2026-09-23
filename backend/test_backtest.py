@@ -318,5 +318,39 @@ def main():
 
     print("======================================")
 
+    print("\n========== STRATEGY DIAGNOSTICS ==========")
+
+    print(
+        f"Expectancy per trade: "
+        f"${result.expectancy:,.2f}"
+    )
+
+    print(
+        f"Payoff ratio:         "
+        f"{result.payoff_ratio:.2f}"
+    )
+
+    print(
+        f"Profit factor:        "
+        f"{result.profit_factor:.2f}"
+    )
+
+    print(
+        f"Win rate:             "
+        f"{result.win_rate:.2f}%"
+    )
+
+    print(
+        f"Total winning P&L:    "
+        f"${result.total_winning_pnl:,.2f}"
+    )
+
+    print(
+        f"Total losing P&L:     "
+        f"${result.total_losing_pnl:,.2f}"
+    )
+
+    print("==========================================")
+
 if __name__ == "__main__":
     main()

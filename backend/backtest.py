@@ -37,6 +37,8 @@ class BacktestResult:
     total_winning_pnl: float
     total_losing_pnl: float
     average_holding_time_seconds: float
+    expectancy: float
+    payoff_ratio: float
 
 class BacktestEngine:
 
@@ -265,4 +267,6 @@ class BacktestEngine:
             total_winning_pnl=report.total_winning_pnl,
             total_losing_pnl=report.total_losing_pnl,
             average_holding_time_seconds=report.average_holding_time_seconds,
+            expectancy=report.expectancy,
+            payoff_ratio=report.payoff_ratio,
         )                                              
