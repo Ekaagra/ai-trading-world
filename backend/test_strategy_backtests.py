@@ -35,36 +35,36 @@ def main():
         limit=5000
     )
 
-    momentum = MomentumAgent(
-        symbol="BTC",
-        short_window=3,
-        long_window=5
-    )
+    strategies = [
+        MomentumAgent(
+            symbol="BTC",
+            short_window=3,
+            long_window=5
+        ),
 
-    mean_reversion = MeanReversionStrategy(
-        symbol="BTC",
-        window=5,
-        deviation_threshold=0.001
-    )
+        MeanReversionStrategy(
+            symbol="BTC",
+            window=5,
+            deviation_threshold=0.001
+        ),
+    ]
 
-    momentum_engine = BacktestEngine(
-        initial_capital=100_000,
-        strategy=momentum
-    )
+    results = {}
 
-    mean_reversion_engine = BacktestEngine(
-        initial_capital=100_000,
-        strategy=mean_reversion
-    )
+    for strategy in strategies:
 
-    momentum_result = momentum_engine.run(candles)
+        print(
+            f"\nRunning {strategy.name} strategy..."
+        )
 
-    mean_reversion_result = mean_reversion_engine.run(candles)
+        engine = BacktestEngine(
+            initial_capital=100_000,
+            strategy=strategy
+        )
 
-    results = {
-        momentum.name: momentum_result,
-        mean_reversion.name: mean_reversion_result,
-    }
+        result = engine.run(candles)
+
+        results[strategy.name] = result
 
     comparison_engine = StrategyComparisonEngine()
 
