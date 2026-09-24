@@ -34,6 +34,8 @@ class CompletedTrade:
 
     exit_reason: str = "SIGNAL"
     exit_message: str = ""
+    regime: str = ""
+
 
 
 class TradeHistory:
@@ -48,7 +50,7 @@ class TradeHistory:
         # Completed BUY → SELL trades
         self.completed_trades: list[CompletedTrade] = []
 
-    def record(self, trade: dict):
+    def record(self, trade: dict,regime: str = ""):
 
         record = TradeRecord(
             timestamp=(
@@ -124,6 +126,7 @@ class TradeHistory:
                     or "SIGNAL"
                 ),
                 exit_message=record.exit_message,
+                regime=regime,
             )
 
             self.completed_trades.append(

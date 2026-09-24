@@ -1,6 +1,8 @@
 from unittest import result
 from .backtest import BacktestEngine
 from .market.historical import HistoricalMarketData
+from .regime_performance import RegimePerformanceAnalyzer
+
 from collections import Counter
 import matplotlib.pyplot as plt
 
@@ -125,7 +127,8 @@ def main():
             f"Exit: ${trade.exit_price:,.2f} | "
             f"P&L: ${trade.realized_pnl:,.2f} | "
             f"Duration: {duration} | "
-            f"Reason: {trade.exit_reason}"
+            f"Reason: {trade.exit_reason} | "
+            f"Regime: {trade.regime}"
         )
 
     print("=======================================")
@@ -351,6 +354,58 @@ def main():
     )
 
     print("==========================================")
+
+    regime_analyzer = RegimePerformanceAnalyzer()
+
+    regime_results = regime_analyzer.analyze(
+        result.completed_trade_details
+    )
+
+    print("\n========== REGIME PERFORMANCE ==========")
+
+    for regime in [
+        "TRENDING",
+        "RANGING",
+        "HIGH_VOLATILITY",
+    ]:
+
+        performance = regime_results[regime]
+
+        print(f"\n{regime}")
+
+        print(
+            f"Trades:          {performance.trades}"
+        )
+
+        print(
+            f"Winning trades:  {performance.winning_trades}"
+        )
+
+        print(
+            f"Losing trades:   {performance.losing_trades}"
+        )
+
+        print(
+            f"Win rate:        "
+            f"{performance.win_rate:.2f}%"
+        )
+
+        print(
+            f"Total P&L:       "
+            f"${performance.total_pnl:,.2f}"
+        )
+
+        print(
+            f"Average P&L:     "
+            f"${performance.average_pnl:,.2f}"
+        )
+
+        print(
+            f"Expectancy:      "
+            f"${performance.expectancy:,.2f}"
+        )
+
+    print("\n=========================================")
 
 if __name__ == "__main__":
     main()

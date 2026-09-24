@@ -7,6 +7,7 @@ from .risk import RiskEngine
 from .trade_history import TradeHistory
 from .equity import EquityTracker
 from .performance import PerformanceAnalyzer
+from .regime import MarketRegimeDetector
 
 @dataclass
 class BacktestResult:
@@ -78,6 +79,8 @@ class BacktestEngine:
             initial_equity=initial_capital
         )
 
+        self.regime_detector = MarketRegimeDetector()
+
     def _normalize_exit_reason(
         self,
         reason: str,
@@ -104,6 +107,12 @@ class BacktestEngine:
             price = candle["close"]
 
             self.close_history.append(price)
+
+            regime_result = self.regime_detector.detect(
+                self.close_history
+            )
+
+            current_regime = regime_result.regime.value
 
             if len(self.close_history) < 5:
                 equity = self.broker.portfolio_value(
@@ -144,7 +153,7 @@ class BacktestEngine:
                     exit_message=exit_decision.reason,
                 )
 
-                self.trade_history.record(trade)
+                self.trade_history.record(trade,regime=current_regime)
 
             else:
 
@@ -183,7 +192,7 @@ class BacktestEngine:
                             timestamp=candle["timestamp"],
                         )
 
-                        self.trade_history.record(trade)
+                        self.trade_history.record(trade,regime=current_regime)
 
                     elif decision.action == "SELL":
 
@@ -196,7 +205,7 @@ class BacktestEngine:
                             exit_message="Momentum agent sell signal",
                         )
 
-                        self.trade_history.record(trade)
+                        self.trade_history.record(trade,regime=current_regime)
 
             # =========================
             # EQUITY UPDATE
