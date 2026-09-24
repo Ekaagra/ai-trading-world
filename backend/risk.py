@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from .agents.momentum import TradeDecision
+from .strategies.types import TradeDecision
 from .models import Portfolio
 
 

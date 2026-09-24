@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 from .agents.momentum import MomentumAgent
+from .strategies.base import Strategy
 from .models import Portfolio
 from .paper_broker import PaperBroker
 from .risk import RiskEngine
@@ -46,12 +47,18 @@ class BacktestEngine:
     def __init__(
         self,
         initial_capital: float = 100_000,
+        strategy: Strategy | None = None
     ):
+        self.strategy = strategy or MomentumAgent(
+            symbol="BTC",
+            short_window=3,
+            long_window=5
+        )
         self.initial_capital = initial_capital
 
         self.portfolio = Portfolio(
             initial_cash=initial_capital,
-            cash=initial_capital,
+            cash=initial_capital
         )
 
         self.broker = PaperBroker(
@@ -62,18 +69,12 @@ class BacktestEngine:
             max_position_value=10_000,
             min_order_value=10,
             stop_loss_percent=0.01,
-            take_profit_percent=0.02,
+            take_profit_percent=0.02
         )
 
         self.trade_history = TradeHistory()
 
-        self.agent = MomentumAgent(
-            symbol="BTC",
-            short_window=3,
-            long_window=5,
-        )
-
-        self.close_history: list[float] = []
+        self.close_history = []
 
         self.equity_tracker = EquityTracker(
             initial_equity=initial_capital
@@ -95,7 +96,6 @@ class BacktestEngine:
             return "STOP_LOSS"
 
         return "SIGNAL"
-
 
     def run(
         self,
@@ -161,9 +161,7 @@ class BacktestEngine:
                 # AGENT
                 # =========================
 
-                decision = self.agent.decide(
-                    self.close_history
-                )
+                decision = self.strategy.decide(self.close_history)
 
                 # =========================
                 # RISK
@@ -238,7 +236,6 @@ class BacktestEngine:
             / self.initial_capital
         ) * 100
 
-        completed_trade_details=self.trade_history.completed_trades,
 
         return BacktestResult(
             initial_capital=self.initial_capital,
