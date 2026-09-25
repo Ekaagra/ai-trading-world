@@ -14,6 +14,7 @@ class TradeRecord:
 
     exit_reason: str = ""
     exit_message: str = ""
+    regime: str = ""
 
 
 @dataclass
@@ -34,7 +35,8 @@ class CompletedTrade:
 
     exit_reason: str = "SIGNAL"
     exit_message: str = ""
-    regime: str = ""
+    entry_regime: str = ""
+    exit_regime: str = ""
 
 
 
@@ -50,36 +52,51 @@ class TradeHistory:
         # Completed BUY → SELL trades
         self.completed_trades: list[CompletedTrade] = []
 
-    def record(self, trade: dict,regime: str = ""):
+    def record(
+        self,
+        trade: dict,
+        regime: str = "",
+    ):
 
         record = TradeRecord(
             timestamp=(
-                datetime.fromtimestamp(trade["timestamp"] / 1000)
-                if isinstance(trade.get("timestamp"), (int, float))
+                datetime.fromtimestamp(
+                    trade["timestamp"] / 1000
+                )
+                if isinstance(
+                    trade.get("timestamp"),
+                    (int, float)
+                )
                 else (
                     trade["timestamp"]
                     if trade.get("timestamp") is not None
                     else datetime.now()
                 )
             ),
+
             symbol=trade["symbol"],
             side=trade["side"],
             quantity=trade["quantity"],
             market_price=trade["market_price"],
             execution_price=trade["execution_price"],
             fee=trade["fee"],
+
             realized_pnl=trade.get(
                 "realized_pnl",
                 0.0
             ),
+
             exit_reason=trade.get(
                 "exit_reason",
                 "",
             ),
+
             exit_message=trade.get(
                 "exit_message",
                 "",
             ),
+
+            regime=regime,
         )
 
         # Store every execution
@@ -91,7 +108,9 @@ class TradeHistory:
 
         if record.side == "BUY":
 
-            self.open_trades[record.symbol] = record
+            self.open_trades[
+                record.symbol
+            ] = record
 
         # ==============================
         # SELL
@@ -110,8 +129,13 @@ class TradeHistory:
                 symbol=record.symbol,
                 quantity=record.quantity,
 
-                entry_price=entry.execution_price,
-                exit_price=record.execution_price,
+                entry_price=(
+                    entry.execution_price
+                ),
+
+                exit_price=(
+                    record.execution_price
+                ),
 
                 entry_fee=entry.fee,
                 exit_fee=record.fee,
@@ -125,8 +149,18 @@ class TradeHistory:
                     record.exit_reason
                     or "SIGNAL"
                 ),
-                exit_message=record.exit_message,
-                regime=regime,
+
+                exit_message=(
+                    record.exit_message
+                ),
+
+                entry_regime=(
+                    entry.regime
+                ),
+
+                exit_regime=(
+                    record.regime
+                ),
             )
 
             self.completed_trades.append(
@@ -137,7 +171,7 @@ class TradeHistory:
             del self.open_trades[
                 record.symbol
             ]
-
+        
     def get_trades(self):
         return self.trades.copy()
 
