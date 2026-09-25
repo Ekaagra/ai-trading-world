@@ -99,6 +99,11 @@ def main():
         )
 
         print(
+            f"Robust Selection Failed: "
+            f"{window.robust_selection_failed}"
+        )
+
+        print(
             f"Test Return: "
             f"{window.test_result.total_return_percent:.2f}%"
         )

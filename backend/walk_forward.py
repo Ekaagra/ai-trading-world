@@ -4,7 +4,7 @@ from typing import Callable
 from .backtest import BacktestResult, BacktestEngine
 from .parameter_analysis import ParameterAnalyzer
 from .strategies.base import Strategy
-
+from .robust_parameter_selection import RobustParameterSelector
 
 @dataclass
 class WalkForwardResult:
@@ -98,12 +98,18 @@ class WalkForwardTester:
         # SELECT TRAINING CONFIG
         # =========================
 
-        selected = max(
-            analyzed_results,
-            key=lambda result: result.final_equity
+        selector = RobustParameterSelector(
+            minimum_trades=10,
+            minimum_profit_factor=0.8,
         )
 
-        selected_parameters = selected.parameters
+        robust_selection = selector.select(
+            analyzed_results
+        )
+
+        selected_parameters = (
+            robust_selection.parameters
+        )
 
         selected_train_strategy = strategy_factory(
             selected_parameters

@@ -2,15 +2,23 @@ from dataclasses import dataclass
 
 from .backtest import BacktestResult, BacktestEngine
 from .parameter_analysis import ParameterAnalyzer
-from .strategy_evaluation import StrategyEvaluation, StrategyEvaluator
+from .strategy_evaluation import (
+    StrategyEvaluation,
+    StrategyEvaluator,
+)
 from .strategies.base import Strategy
+from .robust_parameter_selection import (
+    RobustParameterSelector,
+)
 
 
 @dataclass
 class RollingWindowResult:
     window_number: int
+
     train_start: int
     train_end: int
+
     test_start: int
     test_end: int
 
@@ -21,6 +29,8 @@ class RollingWindowResult:
 
     evaluation: StrategyEvaluation
 
+    robust_selection_failed: bool
+
 
 @dataclass
 class RollingWalkForwardResult:
@@ -29,6 +39,7 @@ class RollingWalkForwardResult:
 
     total_test_trades: int
     total_test_pnl: float
+
     average_test_return_percent: float
     average_test_expectancy: float
     average_test_drawdown_percent: float
@@ -67,11 +78,11 @@ class RollingWalkForwardTester:
 
         parameter_analyzer = ParameterAnalyzer()
         strategy_evaluator = StrategyEvaluator()
+        parameter_selector = RobustParameterSelector()
 
         windows = []
 
         window_number = 1
-
         start = 0
 
         while (
@@ -142,14 +153,45 @@ class RollingWalkForwardTester:
                     "were evaluated."
                 )
 
-            selected = max(
-                analyzed_results,
-                key=lambda result:
-                result.final_equity
+            # =========================
+            # ROBUST PARAMETER SELECTION
+            # =========================
+
+            robust_selection = (
+                parameter_selector.select(
+                    analyzed_results
+                )
             )
 
             selected_parameters = (
-                selected.parameters
+                robust_selection.parameters
+            )
+
+            # =========================
+            # SELECTED TRAINING RESULT
+            # =========================
+
+            selected_train_strategy = (
+                strategy_factory(
+                    selected_parameters
+                )
+            )
+
+            selected_train_engine = (
+                BacktestEngine(
+                    initial_capital=(
+                        self.initial_capital
+                    ),
+                    strategy=(
+                        selected_train_strategy
+                    ),
+                )
+            )
+
+            selected_train_result = (
+                selected_train_engine.run(
+                    train_candles
+                )
             )
 
             # =========================
@@ -173,10 +215,16 @@ class RollingWalkForwardTester:
             # EVALUATION
             # =========================
 
-            evaluation = strategy_evaluator.evaluate(
-                strategy_name=test_strategy.name,
-                result=test_result,
+            evaluation = (
+                strategy_evaluator.evaluate(
+                    strategy_name=test_strategy.name,
+                    result=test_result,
+                )
             )
+
+            # =========================
+            # WINDOW RESULT
+            # =========================
 
             window_result = RollingWindowResult(
                 window_number=window_number,
@@ -192,7 +240,7 @@ class RollingWalkForwardTester:
                 ),
 
                 train_result=(
-                    selected
+                    selected_train_result
                 ),
 
                 test_result=(
@@ -201,6 +249,11 @@ class RollingWalkForwardTester:
 
                 evaluation=(
                     evaluation
+                ),
+
+                robust_selection_failed=(
+                    robust_selection
+                    .all_candidates_failed_filters
                 ),
             )
 
@@ -237,7 +290,8 @@ class RollingWalkForwardTester:
 
         average_test_expectancy = (
             sum(
-                window.test_result.expectancy
+                window.test_result
+                .expectancy
                 for window in windows
             )
             / len(windows)
