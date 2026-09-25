@@ -103,9 +103,21 @@ class WalkForwardTester:
             key=lambda result: result.final_equity
         )
 
-        selected_parameters = (
-            selected.parameters
+        selected_parameters = selected.parameters
+
+        selected_train_strategy = strategy_factory(
+            selected_parameters
         )
+
+        selected_train_engine = BacktestEngine(
+            initial_capital=self.initial_capital,
+            strategy=selected_train_strategy,
+        )
+
+        selected_train_result = selected_train_engine.run(
+            train_candles
+        )
+
 
         # =========================
         # OUT-OF-SAMPLE TEST
@@ -129,6 +141,6 @@ class WalkForwardTester:
             train_candles=len(train_candles),
             test_candles=len(test_candles),
             selected_parameters=selected_parameters,
-            train_result=selected,
+            train_result=selected_train_result,
             test_result=test_result,
         )
